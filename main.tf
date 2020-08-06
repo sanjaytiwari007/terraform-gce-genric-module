@@ -15,6 +15,7 @@ resource "google_compute_instance" "default" {
   zone = var.zone
   allow_stopping_for_update = var.allow_stopping_forupdate
   boot_disk {
+    #KMS key for CMEK encryption
     kms_key_self_link = var.kms_key
     auto_delete = var.auto_delete_disk
     initialize_params {
@@ -26,13 +27,17 @@ resource "google_compute_instance" "default" {
   labels = local.gce_labels
   network_interface {
     subnetwork = var.subnet
+    #Only use this when you have static internal IP
     network_ip = var.static_ip
   }
+  #Use this for Network tag if you have for your firewall rule
   tags = var.network_tag == null? [] : var.network_tag
+  #Use this to pass your startup script
   metadata_startup_script = (var.startup_script == null ) ? null : file(var.startup_script)
   metadata {
     enable-oslogin = var.oslogin_enable
   }
+  #We will use a servcie account which will control server access
   dynamic "service_account" {
     for_each = var.service_account == null ? [] : [var.service_account]
     content {
